@@ -1,6 +1,6 @@
 # SonoraLab
 
-Laboratório web de áudio. A primeira entrega inspeciona WAV PCM de 16 bits, mono ou estéreo, e exibe duração, canais e taxa de amostragem. O navegador reproduz o arquivo selecionado.
+SonoraLab é um laboratório web de áudio voltado à reprodução, à visualização e à análise de sinais sonoros. O projeto explora a forma de onda e o conteúdo de frequência de trechos de áudio.
 
 ## Executar
 
@@ -31,3 +31,9 @@ dotnet test backend/SonoraLab.slnx
 A API recebe o campo `file` em `multipart/form-data` no endpoint `POST /api/audio/inspect`. O leitor C# verifica o contêiner RIFF/WAVE e retorna metadados. Limites iniciais de 20 MiB e 120 segundos.
 
 O próximo marco é a forma de onda com seleção de intervalo.
+
+## Documentação
+
+- [Arquitetura e decisões técnicas](docs/arquitetura.md)
+- [Fluxos e contratos da API](docs/fluxos.md)
+- [Etapas e critérios de conclusão](docs/etapas.md)
