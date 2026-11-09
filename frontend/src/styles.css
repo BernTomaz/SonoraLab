@@ -23,3 +23,16 @@ dl { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
 dt { font-size: .875rem; }
 dd { margin: 0; font-weight: 650; }
 .error { color: #9c2020; }
+
+button { margin-top: 1rem; font: inherit; padding: .45rem .7rem; }
+.plot { display: block; width: 100%; height: 9rem; background: #eef4f7; }
+.waveform { cursor: crosshair; touch-action: none; }
+.trace, .axis, .peak { fill: none; vector-effect: non-scaling-stroke; }
+.trace { stroke: #17647a; stroke-linecap: round; }
+.axis { stroke: #8198a3; }
+.peak { stroke: #a83a24; stroke-width: 2; }
+.selection { fill: #b5dae4; }
+.axis-labels, .range-fields { display: flex; flex-wrap: wrap; gap: 1rem; }
+.axis-labels { justify-content: space-between; }
+.range-fields { margin-top: 1rem; }
+.range-fields input { width: 9rem; padding: .35rem; font: inherit; }

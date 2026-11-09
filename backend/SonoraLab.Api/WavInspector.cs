@@ -4,11 +4,15 @@ namespace SonoraLab.Audio;
 
 public sealed record WavMetadata(double DurationSeconds, int Channels, int SampleRateHz);
 
+internal sealed record WavPcm(WavMetadata Metadata, long Offset, int Frames);
+
 public static class WavInspector
 {
     public const int MaxBytes = 20 * 1024 * 1024;
 
-    public static WavMetadata Inspect(Stream stream)
+    public static WavMetadata Inspect(Stream stream) => ReadPcm(stream).Metadata;
+
+    internal static WavPcm ReadPcm(Stream stream)
     {
         Span<byte> header = stackalloc byte[12];
         Read(stream, header);
@@ -24,6 +28,7 @@ public static class WavInspector
         int sampleRate = 0;
         int alignment = 0;
         long dataSize = -1;
+        long dataOffset = 0;
 
         while (stream.Position < end)
         {
@@ -61,6 +66,7 @@ public static class WavInspector
                     throw new InvalidDataException();
 
                 dataSize = size;
+                dataOffset = stream.Position;
             }
 
             stream.Position = next;
@@ -69,7 +75,8 @@ public static class WavInspector
         if (dataSize < 0)
             throw new InvalidDataException();
 
-        return new WavMetadata((double)dataSize / alignment / sampleRate, channels, sampleRate);
+        int frames = checked((int)(dataSize / alignment));
+        return new WavPcm(new WavMetadata((double)frames / sampleRate, channels, sampleRate), dataOffset, frames);
     }
 
     private static void Read(Stream stream, Span<byte> buffer)

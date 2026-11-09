@@ -28,9 +28,9 @@ Abra http://localhost:4200. O proxy de desenvolvimento encaminha `/api/**` à AP
 dotnet test backend/SonoraLab.slnx
 ```
 
-A API recebe o campo `file` em `multipart/form-data` no endpoint `POST /api/audio/inspect`. O leitor C# verifica o contêiner RIFF/WAVE e retorna metadados. Limites iniciais de 20 MiB e 120 segundos.
+A API recebe o campo `file` em `multipart/form-data` no endpoint `POST /api/audio/inspect`. O leitor C# verifica o contêiner RIFF/WAVE e retorna metadados e a forma de onda. Limites de 20 MiB e 120 segundos.
 
-O próximo marco é a forma de onda com seleção de intervalo.
+Para experimentar sem um arquivo próprio, clique em **Carregar tom de 440 Hz**, ajuste o intervalo na forma de onda e clique em **Analisar trecho**. A FFT roda na API .NET.
 
 ## Documentação
 
