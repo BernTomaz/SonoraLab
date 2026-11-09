@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+  background: #f4f7f9;
+  color: #142b3a;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 42rem;
+  margin: clamp(2rem, 8vw, 6rem) auto;
+  padding: 0 1.25rem;
+}
+
+h1 { margin: 0; font-size: clamp(2.5rem, 8vw, 4rem); }
+h2 { margin-top: 0; }
+.eyebrow { font-size: .8rem; letter-spacing: .12em; font-weight: 700; }
+section { margin-top: 2rem; padding: 1.5rem; border: 1px solid #bfced6; background: white; }
+label { font-weight: 650; }
+input, audio { display: block; max-width: 100%; }
+audio { margin-top: 1.5rem; width: 100%; }
+dl { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
+dt { font-size: .875rem; }
+dd { margin: 0; font-weight: 650; }
+.error { color: #9c2020; }

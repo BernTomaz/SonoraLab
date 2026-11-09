@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SonoraLab.Api/SonoraLab.Api.csproj" />
+  <Project Path="SonoraLab.Tests/SonoraLab.Tests.csproj" />
+</Solution>

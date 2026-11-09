@@ -1,0 +1,27 @@
+<main>
+  <p class="eyebrow">LABORATÓRIO DE ÁUDIO</p>
+  <h1>SonoraLab</h1>
+  <p>Importe um WAV para ouvir o áudio e conferir seus metadados.</p>
+
+  <section aria-labelledby="inspect-title">
+    <h2 id="inspect-title">Inspecionar áudio</h2>
+    <label for="wav">Selecione um WAV</label>
+    <p id="format">PCM de 16 bits, mono ou estéreo. Até 20 MiB e 120 segundos.</p>
+    <input id="wav" type="file" accept=".wav,audio/wav,audio/x-wav"
+           aria-describedby="format" (change)="selectFile($event)">
+
+    <div aria-live="polite">
+      @if (loading()) { <p>Validando o arquivo…</p> }
+      @if (error()) { <p class="error">{{ error() }}</p> }
+    </div>
+
+    @if (metadata(); as wav) {
+      <audio controls [src]="source()" aria-label="Áudio selecionado"></audio>
+      <dl>
+        <div><dt>Duração</dt><dd>{{ wav.durationSeconds | number:'1.0-3' }} s</dd></div>
+        <div><dt>Canais</dt><dd>{{ wav.channels }}</dd></div>
+        <div><dt>Taxa de amostragem</dt><dd>{{ wav.sampleRateHz }} Hz</dd></div>
+      </dl>
+    }
+  </section>
+</main>
