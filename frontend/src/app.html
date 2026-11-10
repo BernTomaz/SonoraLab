@@ -1,91 +1,140 @@
-<main>
-  <p class="eyebrow">LABORATÓRIO DE ÁUDIO</p>
-  <h1>SonoraLab</h1>
-  <p>Ouça um WAV, selecione um trecho e explore suas frequências.</p>
-
-  <section aria-labelledby="inspect-title">
-    <h2 id="inspect-title">Inspecionar áudio</h2>
-    <label for="wav">Selecione um WAV</label>
-    <p id="format">PCM de 16 bits, mono ou estéreo. Até 20 MiB e 120 segundos.</p>
-    <input id="wav" type="file" accept=".wav,audio/wav,audio/x-wav"
-           aria-describedby="format" (change)="selectFile($event)">
-    <button type="button" (click)="loadDemo()">Carregar tom de 440 Hz</button>
-
-    <div aria-live="polite">
-      @if (loading()) { <p>Validando o arquivo.</p> }
-      @if (error()) { <p class="error">{{ error() }}</p> }
+<header class="app-bar">
+  <div class="app-bar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-6 4 12 3-9 2 3h4"/></svg>
+      </span>
+      <span>Sonora<span class="brand-accent">Lab</span></span>
     </div>
+    <span class="app-label">Laboratório de áudio</span>
+  </div>
+</header>
 
-    @if (metadata(); as wav) {
-      <audio controls [src]="source()" aria-label="Áudio selecionado"></audio>
-      <dl>
-        <div><dt>Duração</dt><dd>{{ wav.durationSeconds | number:'1.0-3' }} s</dd></div>
-        <div><dt>Canais</dt><dd>{{ wav.channels }}</dd></div>
-        <div><dt>Taxa de amostragem</dt><dd>{{ wav.sampleRateHz }} Hz</dd></div>
-      </dl>
-    }
-  </section>
+<main>
+  <div class="page-heading">
+    <p class="eyebrow">ÁUDIO DIGITAL</p>
+    <h1>Análise de áudio</h1>
+    <p>Ouça um WAV, selecione um trecho e explore suas frequências.</p>
+  </div>
 
-  @if (metadata(); as wav) {
-    <section aria-labelledby="waveform-title">
-      <h2 id="waveform-title">Forma de onda</h2>
-      <p id="range-hint">Arraste no gráfico ou preencha os campos. Escolha de 4 a 524.288 amostras por canal, até 5 s.</p>
-      <svg class="plot waveform" viewBox="0 0 800 120" preserveAspectRatio="none" role="img"
-           aria-label="Amplitude ao longo do tempo"
-           (pointerdown)="beginDrag($event)" (pointermove)="updateDrag($event)"
-           (pointerup)="updateDrag($event); endDrag()" (lostpointercapture)="endDrag()">
-        @if (start() >= 0 && end() <= wav.durationSeconds && end() > start()) {
-          <rect class="selection" [attr.x]="start() * 800 / wav.durationSeconds"
-                [attr.width]="(end() - start()) * 800 / wav.durationSeconds" height="120"/>
-        }
-        <path class="axis" d="M0 60H800"/>
-        <path class="trace" [attr.d]="waveformPath()"/>
-      </svg>
-      <div class="axis-labels"><span>0 s</span><span>{{ wav.durationSeconds | number:'1.0-3' }} s</span></div>
-      <div class="range-fields">
-        <label>Início (s)
-          <input type="number" min="0" [attr.max]="wav.durationSeconds" step="any"
-                 [value]="start()" (input)="selectBoundary('start', $event)" aria-describedby="range-hint">
-        </label>
-        <label>Fim (s)
-          <input type="number" min="0" [attr.max]="wav.durationSeconds" step="any"
-                 [value]="end()" (input)="selectBoundary('end', $event)" aria-describedby="range-hint">
-        </label>
+  <div class="workspace">
+    <section class="panel source-panel" aria-labelledby="inspect-title">
+      <div class="section-heading">
+        <span class="step" aria-hidden="true">01</span>
+        <h2 id="inspect-title">Fonte de áudio</h2>
       </div>
-      <button type="button" [disabled]="!validRange() || analyzing()" (click)="analyze()">Analisar trecho</button>
-      <div aria-live="polite">
-        @if (analyzing()) { <p>Calculando o espectro.</p> }
-        @if (analysisError()) { <p class="error">{{ analysisError() }}</p> }
+
+      <div class="file-picker">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></svg>
+        <label for="wav">Escolher arquivo WAV</label>
+        <input id="wav" type="file" accept=".wav,audio/wav,audio/x-wav"
+               aria-describedby="format" (change)="selectFile($event)">
       </div>
+      <p class="hint" id="format">PCM de 16 bits, mono ou estéreo. Até 20 MiB e 120 s.</p>
+      <button class="button secondary" type="button" (click)="loadDemo()">Carregar tom de 440 Hz</button>
+
+      <div class="feedback" aria-live="polite">
+        @if (loading()) { <p>Validando o arquivo.</p> }
+        @if (error()) { <p class="error">{{ error() }}</p> }
+      </div>
+
+      @if (metadata(); as wav) {
+        <div class="playback">
+          <h3>Reprodução</h3>
+          <audio controls [src]="source()" aria-label="Áudio selecionado"></audio>
+          <dl class="metrics source-metrics">
+            <div><dt>Duração</dt><dd>{{ wav.durationSeconds | number:'1.0-3' }} s</dd></div>
+            <div><dt>Canais</dt><dd>{{ wav.channels }}</dd></div>
+            <div><dt>Taxa de amostragem</dt><dd>{{ wav.sampleRateHz | number }} Hz</dd></div>
+          </dl>
+        </div>
+      }
     </section>
-  }
 
-  @if (spectrum(); as result) {
-    <section aria-labelledby="spectrum-title">
-      <h2 id="spectrum-title">Espectro</h2>
-      <p aria-live="polite">
-        @if (result.dominantFrequencyHz !== null) {
-          <strong>Pico dominante de {{ result.dominantFrequencyHz | number:'1.0-2' }} Hz</strong>
+    <div class="analysis">
+      <section class="panel" aria-labelledby="waveform-title">
+        <div class="section-heading">
+          <span class="step" aria-hidden="true">02</span>
+          <h2 id="waveform-title">Forma de onda</h2>
+        </div>
+        @if (metadata(); as wav) {
+          <p class="hint" id="range-hint">Arraste no gráfico ou informe os tempos. O trecho pode ter de 4 a 524.288 amostras por canal e até 5 s.</p>
+          <svg class="plot waveform" viewBox="0 0 800 120" preserveAspectRatio="none" role="img"
+               aria-label="Amplitude ao longo do tempo"
+               (pointerdown)="beginDrag($event)" (pointermove)="updateDrag($event)"
+               (pointerup)="updateDrag($event); endDrag()" (lostpointercapture)="endDrag()">
+            @if (start() >= 0 && end() <= wav.durationSeconds && end() > start()) {
+              <rect class="selection" [attr.x]="start() * 800 / wav.durationSeconds"
+                    [attr.width]="(end() - start()) * 800 / wav.durationSeconds" height="120"/>
+            }
+            <path class="axis" d="M0 60H800"/>
+            <path class="trace" [attr.d]="waveformPath()"/>
+          </svg>
+          <div class="axis-labels"><span>0 s</span><span>{{ wav.durationSeconds | number:'1.0-3' }} s</span></div>
+          <div class="range-controls">
+            <label>Início (s)
+              <input type="number" min="0" [attr.max]="wav.durationSeconds" step="any"
+                     [value]="start()" (input)="selectBoundary('start', $event)" aria-describedby="range-hint">
+            </label>
+            <label>Fim (s)
+              <input type="number" min="0" [attr.max]="wav.durationSeconds" step="any"
+                     [value]="end()" (input)="selectBoundary('end', $event)" aria-describedby="range-hint">
+            </label>
+            <button class="button primary" type="button" [disabled]="!validRange() || analyzing()" (click)="analyze()">
+              {{ analyzing() ? 'Analisando…' : 'Analisar trecho' }}
+            </button>
+          </div>
+          <div class="feedback" aria-live="polite">
+            @if (analyzing()) { <p>Calculando o espectro.</p> }
+            @if (analysisError()) { <p class="error">{{ analysisError() }}</p> }
+          </div>
         } @else {
-          <strong>Sem frequência dominante no trecho.</strong>
+          <div class="empty-state plot">
+            <svg viewBox="0 0 120 44" fill="none" aria-hidden="true">
+              <path d="M1 22h16l5-5 5 10 6-18 7 26 7-30 7 34 7-26 7 16 6-11 6 8 5-4h34"/>
+            </svg>
+            <p>Nenhum áudio carregado</p>
+            <span>Escolha um WAV ou experimente o tom de 440 Hz.</span>
+          </div>
         }
-      </p>
-      <svg class="plot" viewBox="0 0 800 120" preserveAspectRatio="none" role="img"
-           aria-label="Magnitude relativa ao pico em função da frequência">
-        <path class="axis" d="M0 119H800"/>
-        <path class="trace" [attr.d]="spectrumPath()"/>
-        @if (result.dominantFrequencyHz !== null) {
-          <line class="peak" [attr.x1]="result.dominantFrequencyHz * 800 / result.nyquistHz"
-                [attr.x2]="result.dominantFrequencyHz * 800 / result.nyquistHz" y1="0" y2="120"/>
-        }
-      </svg>
-      <div class="axis-labels"><span>0 Hz</span><span>{{ result.nyquistHz | number:'1.0-2' }} Hz</span></div>
-      <dl>
-        <div><dt>Amostras do trecho</dt><dd>{{ result.sampleCount }}</dd></div>
-        <div><dt>Tamanho da FFT</dt><dd>{{ result.fftSize }}</dd></div>
-        <div><dt>Espaçamento entre bins</dt><dd>{{ result.binSpacingHz | number:'1.0-3' }} Hz</dd></div>
-      </dl>
-      <p>Compare dois comprimentos de trecho. A janela de Hann reduz o vazamento espectral. Completar a FFT com zeros aproxima os pontos da grade, sem melhorar por si só a capacidade de separar duas frequências.</p>
-    </section>
-  }
+      </section>
+
+      @if (metadata()) {
+        <section class="panel spectrum-panel" aria-labelledby="spectrum-title">
+          <div class="section-heading">
+            <span class="step" aria-hidden="true">03</span>
+            <h2 id="spectrum-title">Espectro</h2>
+          </div>
+          @if (spectrum(); as result) {
+            <div class="spectrum-result" aria-live="polite">
+              @if (result.dominantFrequencyHz !== null) {
+                <span>Pico dominante</span>
+                <strong>{{ result.dominantFrequencyHz | number:'1.0-2' }} <small>Hz</small></strong>
+              } @else {
+                <span>Sem frequência dominante no trecho.</span>
+              }
+            </div>
+            <svg class="plot" viewBox="0 0 800 120" preserveAspectRatio="none" role="img"
+                 aria-label="Magnitude relativa ao pico em função da frequência">
+              <path class="axis" d="M0 119H800"/>
+              <path class="trace" [attr.d]="spectrumPath()"/>
+              @if (result.dominantFrequencyHz !== null) {
+                <line class="peak" [attr.x1]="result.dominantFrequencyHz * 800 / result.nyquistHz"
+                      [attr.x2]="result.dominantFrequencyHz * 800 / result.nyquistHz" y1="0" y2="120"/>
+              }
+            </svg>
+            <div class="axis-labels"><span>0 Hz</span><span>{{ result.nyquistHz | number:'1.0-2' }} Hz</span></div>
+            <dl class="metrics spectrum-metrics">
+              <div><dt>Amostras do trecho</dt><dd>{{ result.sampleCount | number }}</dd></div>
+              <div><dt>Tamanho da FFT</dt><dd>{{ result.fftSize | number }}</dd></div>
+              <div><dt>Espaçamento entre bins</dt><dd>{{ result.binSpacingHz | number:'1.0-3' }} Hz</dd></div>
+            </dl>
+            <p class="hint spectrum-note">A janela de Hann reduz o vazamento espectral. Preencher a FFT com zeros aproxima os pontos da grade. A capacidade de separar frequências próximas depende da duração do trecho e da janela.</p>
+          } @else {
+            <p class="hint spectrum-note">Selecione um intervalo na forma de onda e clique em <strong>Analisar trecho</strong> para ver o espectro.</p>
+          }
+        </section>
+      }
+    </div>
+  </div>
 </main>
