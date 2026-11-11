@@ -30,4 +30,4 @@ O Git fica na raiz. Frontend e backend têm dependências e builds próprios, e 
 - **Visualização.** Os gráficos usam SVG. O espaçamento entre bins é a taxa de amostragem dividida pelo tamanho da FFT. O preenchimento com zeros aumenta a densidade da grade. A duração do trecho e a janela determinam a capacidade de separar frequências próximas. O limite de Nyquist é metade da taxa de amostragem.
 - **Pico dominante.** É a frequência de maior magnitude, que pode corresponder a um harmônico. A estimativa posterior de nota para sons isolados deverá sinalizar incerteza em caso de ruído, silêncio ou múltiplos instrumentos.
 
-Veja os [fluxos e contratos](fluxos.md) e as [etapas de desenvolvimento](etapas.md).
+Veja os [fluxos e contratos](fluxos.md), a [interface e operação](interface.md) e as [etapas de desenvolvimento](etapas.md).

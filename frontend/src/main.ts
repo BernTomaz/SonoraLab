@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { Subscription } from 'rxjs';
+import { Subscription, timeout, TimeoutError } from 'rxjs';
 import { demoTone } from './demo-tone';
 
 interface WavMetadata {
@@ -33,6 +33,7 @@ class App {
   private file?: File;
   private dragStart?: number;
 
+  readonly selectedFile = signal<{ name: string; size: number } | null>(null);
   readonly source = signal('');
   readonly metadata = signal<WavMetadata | null>(null);
   readonly loading = signal(false);
@@ -42,12 +43,33 @@ class App {
   readonly spectrum = signal<Spectrum | null>(null);
   readonly analyzing = signal(false);
   readonly analysisError = signal('');
-  readonly validRange = computed(() => {
-    const wav = this.metadata();
-    if (!wav || this.start() < 0 || this.end() > wav.durationSeconds) return false;
-    const samples = Math.round(this.end() * wav.sampleRateHz) - Math.round(this.start() * wav.sampleRateHz);
-    return samples >= 4 && samples <= Math.min(524288, 5 * wav.sampleRateHz);
+  readonly maxSelectionSeconds = computed(() => {
+    const rate = this.metadata()?.sampleRateHz;
+    return rate ? Math.min(5, 524288 / rate) : 5;
   });
+  readonly selectionDuration = computed(() => {
+    const duration = this.end() - this.start();
+    return Number.isFinite(duration) && duration > 0 ? duration : 0;
+  });
+  readonly rangeError = computed(() => {
+    const wav = this.metadata();
+    if (!wav) return '';
+    const start = this.start();
+    const end = this.end();
+    if (!Number.isFinite(start) || !Number.isFinite(end))
+      return 'Preencha os dois tempos para selecionar um trecho.';
+    if (start < 0 || end > wav.durationSeconds)
+      return 'Mantenha o intervalo dentro da duração do áudio.';
+    if (end <= start)
+      return 'O fim deve ser maior que o início.';
+    const samples = Math.round(end * wav.sampleRateHz) - Math.round(start * wav.sampleRateHz);
+    if (samples < 4)
+      return 'O trecho é muito curto. Amplie a seleção.';
+    if (samples > Math.min(524288, 5 * wav.sampleRateHz))
+      return 'O trecho excede o limite de análise. Reduza a seleção.';
+    return '';
+  });
+  readonly validRange = computed(() => this.metadata() !== null && !this.rangeError());
 
   readonly waveformPath = computed(() => {
     const blocks = this.metadata()?.waveform ?? [];
@@ -84,16 +106,21 @@ class App {
   }
 
   private inspect(file: File): void {
-    this.clearSelection();
     if (file.size > 20 * 1024 * 1024) {
       this.error.set('O limite por arquivo é de 20 MiB.');
       return;
     }
 
+    if (file.size === 0) {
+      this.error.set('O arquivo está vazio. Escolha outro WAV.');
+      return;
+    }
+    this.clearSelection();
+    this.selectedFile.set({ name: file.name, size: file.size });
     const form = new FormData();
     form.set('file', file);
     this.loading.set(true);
-    this.inspection = this.http.post<WavMetadata>('/api/audio/inspect', form).subscribe({
+    this.inspection = this.http.post<WavMetadata>('/api/audio/inspect', form).pipe(timeout(30000)).subscribe({
       next: (metadata) => {
         this.file = file;
         this.source.set(URL.createObjectURL(file));
@@ -101,11 +128,15 @@ class App {
         this.end.set(Math.min(1, metadata.durationSeconds, 524288 / metadata.sampleRateHz));
         this.loading.set(false);
       },
-      error: (failure: HttpErrorResponse) => {
+      error: (failure: HttpErrorResponse | TimeoutError) => {
         this.error.set(this.errorMessage(failure));
         this.loading.set(false);
       },
     });
+  }
+
+  timeInputValue(value: number): number | string {
+    return Number.isFinite(value) ? value : '';
   }
 
   selectBoundary(boundary: 'start' | 'end', event: Event): void {
@@ -142,16 +173,32 @@ class App {
     form.set('startSeconds', String(this.start()));
     form.set('endSeconds', String(this.end()));
     this.analyzing.set(true);
-    this.analysis = this.http.post<Spectrum>('/api/audio/analyze', form).subscribe({
+    this.analysis = this.http.post<Spectrum>('/api/audio/analyze', form).pipe(timeout(30000)).subscribe({
       next: (result) => {
         this.spectrum.set(result);
         this.analyzing.set(false);
       },
-      error: (failure: HttpErrorResponse) => {
+      error: (failure: HttpErrorResponse | TimeoutError) => {
         this.analysisError.set(this.errorMessage(failure));
         this.analyzing.set(false);
       },
     });
+  }
+
+  resetRange(): void {
+    const wav = this.metadata();
+    if (!wav) return;
+    this.clearAnalysis();
+    this.start.set(0);
+    this.end.set(Math.min(1, wav.durationSeconds, this.maxSelectionSeconds()));
+  }
+
+  cancelAnalysis(): void {
+    this.clearAnalysis();
+  }
+
+  playbackFailed(): void {
+    this.error.set('O navegador não conseguiu reproduzir este WAV. Você ainda pode analisar o trecho.');
   }
 
   private pointerTime(event: PointerEvent): number {
@@ -161,7 +208,11 @@ class App {
     return ratio * (this.metadata()?.durationSeconds ?? 0);
   }
 
-  private errorMessage(failure: HttpErrorResponse): string {
+  private errorMessage(failure: HttpErrorResponse | TimeoutError): string {
+    if (failure instanceof TimeoutError)
+      return 'A operação demorou mais de 30 segundos. Tente novamente.';
+    if (failure.status === 0)
+      return 'Não foi possível conectar à API. Confira se o backend está em execução.';
     const title = failure.error?.title;
     return typeof title === 'string'
       ? title
@@ -175,11 +226,12 @@ class App {
     this.analyzing.set(false);
   }
 
-  private clearSelection(): void {
+  clearSelection(): void {
     this.inspection?.unsubscribe();
     this.clearAnalysis();
     if (this.source()) URL.revokeObjectURL(this.source());
     this.file = undefined;
+    this.selectedFile.set(null);
     this.dragStart = undefined;
     this.start.set(0);
     this.end.set(0);

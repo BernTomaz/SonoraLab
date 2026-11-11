@@ -21,7 +21,7 @@ sequenceDiagram
     end
 ```
 
-Se o usuário selecionar outro arquivo durante a inspeção, a interface cancela a requisição anterior e libera a URL de reprodução quando substitui o áudio.
+Se o usuário selecionar outro arquivo durante a inspeção, a interface cancela a requisição anterior e libera a URL de reprodução quando substitui o áudio. O painel permite cancelar ou remover o arquivo. Inspeção e análise têm limite de espera de 30 segundos.
 
 ## Seleção e análise do trecho
 
@@ -46,3 +46,5 @@ Se o usuário selecionar outro arquivo durante a inspeção, a interface cancela
 | `415 Unsupported Media Type` | Codificação, profundidade de bits ou quantidade de canais fora do recorte. |
 
 A análise retorna `400` para intervalo inválido e aplica as mesmas validações de arquivo da inspeção. A validação usa o conteúdo do arquivo. A política do MVP é liberar recursos, descartar temporários e manter o áudio fora dos logs. Os gráficos devem ter controles por teclado e resultados textuais equivalentes.
+
+As mensagens, os estados de carregamento e os controles estão descritos em [Interface e operação](interface.md).

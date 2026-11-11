@@ -1,19 +1,32 @@
 # Etapas de desenvolvimento
 
-O MVP entrega o fluxo de importar um WAV, ouvir o áudio, selecionar um trecho e explorar suas frequências.
+O MVP permite importar um WAV, ouvir o áudio, selecionar um trecho e explorar suas frequências.
 
 | Etapa | Estado | Critério de conclusão |
 | --- | --- | --- |
-| 1. Base | Estrutura criada | Angular consulta a API pelo proxy local do monorepo. |
-| 2. Importação | Implementada no código | Um WAV PCM de 16 bits toca e exibe duração, canais e taxa de amostragem. Arquivos inválidos e incompatíveis recebem erros distintos. |
-| 3. Forma de onda | Implementada no código | A API retorna mínimos e máximos por bloco. O gráfico permite selecionar um intervalo válido. |
-| 4. Análise espectral | Implementada no código | Um tom sintético de 440 Hz produz um pico dentro da tolerância da resolução da FFT. Silêncio fica sem pico dominante. |
-| 5. Integração | A validar no navegador | Importação, seleção e espectro funcionam de ponta a ponta, com tratamento de erros e rejeição de intervalos fora dos limites. |
-| 6. Apresentação | Em andamento | README, imagens e instruções permitem executar e demonstrar o projeto. |
-| 7. Evolução | Após o MVP | Adicionar espectrograma com janelas sucessivas, estimativa de nota para sons isolados, comparação entre trechos e exportação de resultados. |
+| 1. Base | Validada em execução local com o tom de teste | Angular consulta a API pelo proxy de desenvolvimento. |
+| 2. Importação | Implementada; upload de WAV externo pendente de validação manual | Arquivo PCM de 16 bits é validado e disponibilizado para reprodução com os metadados corretos. |
+| 3. Forma de onda | Validada com o tom embutido | Gráfico exibe extremos por bloco e permite selecionar o intervalo por arraste ou pelos campos. |
+| 4. Análise espectral | Validada com o tom embutido | Um trecho de 1 s a 8.000 Hz retorna pico próximo de 440 Hz. A tela local mostrou 440,43 Hz, com FFT de 8.192 pontos. |
+| 5. Integração | Parcialmente validada | Fluxo do tom embutido confirmado no navegador. Falta validar upload externo e os estados da interface após as melhorias de usabilidade. |
+| 6. Apresentação | Em andamento | Painel responsivo, favicon e documentação disponíveis. Falta registrar uma demonstração do painel atual para o README. |
+| 7. Evolução | Após o MVP | Espectrograma, estimativa de nota para sons isolados, comparação entre trechos e exportação de resultados. |
 
-## Estado da validação
+## Evidências e limites
 
-Os testes do backend cobrem PCM mono e estéreo, truncamento, codificação incompatível, extremos da forma de onda, um tom de 440 Hz, silêncio e limites do intervalo. As duas rotas de áudio também foram verificadas com requisições HTTP multipart em memória. A validação do build Angular e do fluxo completo pelo navegador está pendente.
+O backend compilou e suas verificações cobriram PCM mono e estéreo, truncamento, codificação incompatível, extremos da forma de onda, tom de 440 Hz, silêncio e intervalos inválidos. As rotas foram verificadas com requisições HTTP multipart em memória.
+
+O fluxo do tom embutido foi confirmado no navegador pelo usuário. Isso valida a integração nesse cenário. O teste com um WAV externo foi adiado pelo usuário e continua pendente.
+
+O layout e o favicon foram atualizados. A revisão atual acrescenta identificação do arquivo, resumo da seleção, mensagens para intervalos inválidos, cancelamento e limite de espera. Os estados de arquivo, seleção, cancelamento, erros, limpeza e limite de espera passaram em verificações diretas do componente com Angular e RxJS. A compilação de templates e TypeScript passou. A revisão visual desses estados no navegador continua pendente. A compilação de produção do Angular também foi concluída com sucesso nesta revisão.
+
+## Próxima verificação manual
+
+1. Carregar o tom de 440 Hz, reproduzir e analisar o intervalo de 0 a 1 s.
+2. Escolher um WAV externo PCM de 16 bits, reproduzir e analisar um trecho válido.
+3. Limpar um campo de tempo, inverter início e fim e selecionar mais que o limite permitido. Conferir as mensagens e o bloqueio do botão de análise.
+4. Alterar o trecho após uma análise. O resultado anterior deve ser removido.
+5. Remover o áudio ou cancelar uma operação em andamento. O painel deve voltar a um estado utilizável.
+6. Conferir a navegação por teclado e a disposição dos controles em uma tela estreita.
 
 O escopo inicial exclui reconhecimento de acordes, captura de microfone, contas e histórico persistente.
