@@ -32,4 +32,4 @@ Os controles têm rótulos, foco visível e áreas de acionamento de pelo menos 
 
 ## Limites de validação
 
-O fluxo do tom embutido foi confirmado no navegador antes da revisão atual. O upload externo e os novos estados precisam de verificação manual. Veja o [roteiro e as evidências](etapas.md).
+O fluxo do tom embutido foi confirmado no navegador antes da revisão atual. O upload externo passou em 17 requisições multipart com arquivos gerados em disco, por HTTP em memória. A escolha do arquivo, sua reprodução e a revisão visual dos estados atuais precisam de conferência manual. Veja o [roteiro e as evidências](etapas.md).
