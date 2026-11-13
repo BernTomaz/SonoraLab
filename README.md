@@ -2,6 +2,18 @@
 
 Laboratório web de reprodução, visualização e análise de sinais sonoros, com Angular e ASP.NET Core. Permite selecionar trechos de áudio e explorar a forma de onda, o espectro e a frequência dominante.
 
+## Demonstração
+
+GIFs ilustrativos do painel, com dados de inspeção e FFT calculados pelo backend.
+
+**Carregamento e análise do tom de 440 Hz**
+
+![Fluxo ilustrativo de carregamento do áudio, seleção e análise espectral](docs/media/fluxo-analise.gif)
+
+**Seleção de trecho e validação do intervalo**
+
+![Fluxo ilustrativo de alteração do trecho, atualização do espectro e validação](docs/media/selecao-validacao.gif)
+
 ## Executar
 
 Requisitos — SDK .NET 10 e Node.js compatível com Angular 21, como Node.js 24.
